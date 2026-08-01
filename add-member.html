@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إضافة عضو جديد</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>إضافة عضو جديد</h1>
+    </header>
+
+    <div class="card">
+      <form id="addMemberForm">
+        <div class="form-group">
+          <label for="memberName">اسم العضو:</label>
+          <input type="text" id="memberName" required placeholder="أدخل اسم العضو">
+        </div>
+        <button type="submit" class="btn btn-success" style="width: 100%;">إضافة العضو</button>
+      </form>
+      <br>
+      <a href="index.html" class="btn" style="width: 100%; background-color: #6b7280;">الرجوع للرئيسية</a>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    document.getElementById('addMemberForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('memberName');
+      const name = nameInput.value.trim();
+
+      if (!name) return;
+
+      const members = getMembers();
+      const newMember = {
+        id: generateId(),
+        name: name,
+        points: 100
+      };
+
+      members.push(newMember);
+      saveMembers(members);
+
+      addLog(`➕ تمت إضافة العضو ${name}`);
+
+      alert(`تمت إضافة العضو "${name}" بنجاح!`);
+      nameInput.value = '';
+    });
+  </script>
+</body>
+</html>
