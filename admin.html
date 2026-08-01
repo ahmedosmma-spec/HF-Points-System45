@@ -169,3 +169,23 @@
   </script>
 </body>
 </html>
+// دالة إرسال رد الأدمن على شكوى معينة
+function replyToComplaint(complaintId) {
+    const replyText = document.getElementById('replyInput-' + complaintId).value.trim();
+    if (!replyText) {
+        alert('اكتب الرد الأول!');
+        return;
+    }
+
+    let complaints = JSON.parse(localStorage.getItem('hf_complaints')) || [];
+    let target = complaints.find(c => c.id === complaintId);
+
+    if (target) {
+        target.reply = replyText;       // نص رد الأدمن
+        target.isRead = false;          // تعيين كغير مقروءة ليظهر إشعار الكورة الحمراء للعضو
+        localStorage.setItem('hf_complaints', JSON.stringify(complaints));
+        
+        alert('تم إرسال الرد بنجاح ووصل لـ صندوق الوارد للعضو! 🚀');
+        location.reload();
+    }
+}

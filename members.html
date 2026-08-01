@@ -1,64 +1,155 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>قائمة الأعضاء</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>قائمة الأعضاء - HF Points System</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #121212; color: #ffffff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 480px; margin-bottom: 20px; }
+        h1 { color: #5865f2; font-size: 1.8rem; }
+        .back-btn { background: #374151; color: #fff; text-decoration: none; padding: 10px 18px; border-radius: 10px; font-weight: bold; font-size: 0.95rem; }
+
+        .container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 14px; }
+        
+        .member-card { background: #1a1a1a; border: 1px solid #2d2d2d; padding: 16px 20px; border-radius: 14px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .member-header { display: flex; justify-content: space-between; align-items: center; }
+        .member-info { display: flex; align-items: center; gap: 10px; }
+        .member-name { font-size: 1.1rem; font-weight: bold; color: #ffffff; }
+        .member-points { background: #6366f1; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; }
+        
+        .settings-btn { background: #374151; border: 1px solid #4b5563; color: #fbbf24; border-radius: 8px; padding: 6px 12px; font-size: 0.9rem; font-weight: bold; cursor: pointer; align-self: flex-end; }
+        
+        /* لوحة التحكم لكل عضو */
+        .admin-controls { display: none; background: #111827; border: 1px solid #374151; padding: 12px; border-radius: 10px; margin-top: 5px; flex-direction: column; gap: 8px; }
+        .admin-controls.active { display: flex; }
+        
+        .control-row { display: flex; gap: 8px; }
+        .ctrl-btn { flex: 1; padding: 8px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; color: #fff; }
+        .btn-edit { background: #3b82f6; }
+        .btn-add { background: #10b981; }
+        .btn-sub { background: #f59e0b; color: #000; }
+        .btn-del { background: #ef4444; }
+
+        .no-data { text-align: center; color: #a4b0be; padding: 30px; background: #1a1a1a; border-radius: 14px; border: 1px solid #2d2d2d; font-size: 1.1rem; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>قائمة الأعضاء</h1>
-    </header>
 
-    <div class="card">
-      <div class="form-group">
-        <input type="text" id="searchInput" placeholder="🔍 ابحث عن عضو بالاسم...">
-      </div>
+    <div class="header">
+        <h1>👥 قائمة الأعضاء</h1>
+        <a href="index.html" class="back-btn">الرئيسية ↩️</a>
     </div>
 
-    <div id="membersContainer" class="members-grid"></div>
+    <div class="container" id="membersList">
+        <!-- يتم تحميل قائمة الأعضاء مع الأزرار هنا -->
+    </div>
 
-    <br>
-    <a href="index.html" class="btn" style="width: 100%; background-color: #6b7280;">الرجوع للرئيسية</a>
-  </div>
+    <script>
+        function loadMembers() {
+            let users = JSON.parse(localStorage.getItem('hf_users')) || [];
+            const container = document.getElementById('membersList');
 
-  <script src="app.js"></script>
-  <script>
-    const searchInput = document.getElementById('searchInput');
-    const membersContainer = document.getElementById('membersContainer');
+            if (users.length === 0) {
+                container.innerHTML = '<div class="no-data">لا يوجد أعضاء مسجلين حتى الآن 📭</div>';
+                return;
+            }
 
-    function renderMembers(filterText = '') {
-      const members = getMembers();
-      membersContainer.innerHTML = '';
+            container.innerHTML = '';
+            users.forEach((u, index) => {
+                const card = document.createElement('div');
+                card.className = 'member-card';
+                card.innerHTML = `
+                    <div class="member-header">
+                        <div class="member-info">
+                            <span style="font-size: 1.3rem;">👤</span>
+                            <div class="member-name">${u.username || 'عضو بدون اسم'}</div>
+                        </div>
+                        <div class="member-points">⭐ ${u.points || 0} نقطة</div>
+                    </div>
+                    
+                    <button class="settings-btn" onclick="openMemberSettings(${index})">⚙️ إعدادات العضو</button>
 
-      const filtered = members.filter(m => m.name.toLowerCase().includes(filterText.toLowerCase()));
+                    <div class="admin-controls" id="controls-${index}">
+                        <div class="control-row">
+                            <button class="ctrl-btn btn-add" onclick="addPoints(${index})">➕ زيادة نقاط</button>
+                            <button class="ctrl-btn btn-sub" onclick="subPoints(${index})">➖ نقص نقاط</button>
+                        </div>
+                        <div class="control-row">
+                            <button class="ctrl-btn btn-edit" onclick="changeName(${index})">✏️ تغيير الاسم</button>
+                            <button class="ctrl-btn btn-del" onclick="deleteUser(${index})">🗑️ حذف العضو</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
 
-      if (filtered.length === 0) {
-        membersContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">لا يوجد أعضاء.</p>';
-        return;
-      }
+        // فتح إعدادات العضو بباسورد 0899
+        function openMemberSettings(index) {
+            const controls = document.getElementById('controls-' + index);
+            
+            // لو مفتوحة نقفلها
+            if (controls.classList.contains('active')) {
+                controls.classList.remove('active');
+                return;
+            }
 
-      filtered.forEach(member => {
-        const status = calculateStatus(member.points);
-        const card = document.createElement('div');
-        card.className = 'member-card';
-        card.innerHTML = `
-          <h3>👤 ${member.name}</h3>
-          <div>💯 النقاط: <strong>${member.points}</strong></div>
-          <div class="status-tag">${status.icon} ${status.text}</div>
-          <a href="member-settings.html?id=${member.id}" class="btn">⚙️ الإعدادات</a>
-        `;
-        membersContainer.appendChild(card);
-      });
-    }
+            // طلب كود الأدمن
+            const pass = prompt('ادخل كلمة سر الأدمن لإدارة العضو:');
+            if (pass === '0899') {
+                controls.classList.add('active');
+            } else if (pass !== null) {
+                alert('كلمة السر غير صحيحة!');
+            }
+        }
 
-    searchInput.addEventListener('input', (e) => {
-      renderMembers(e.target.value);
-    });
+        // 1. زيادة نقاط
+        function addPoints(index) {
+            let users = JSON.parse(localStorage.getItem('hf_users')) || [];
+            let count = prompt('ادخل عدد النقاط للزيادة:');
+            if (count && !isNaN(count)) {
+                users[index].points = (users[index].points || 0) + parseInt(count);
+                localStorage.setItem('hf_users', JSON.stringify(users));
+                loadMembers();
+            }
+        }
 
-    renderMembers();
-  </script>
+        // 2. نقص نقاط
+        function subPoints(index) {
+            let users = JSON.parse(localStorage.getItem('hf_users')) || [];
+            let count = prompt('ادخل عدد النقاط للخصم:');
+            if (count && !isNaN(count)) {
+                users[index].points = Math.max(0, (users[index].points || 0) - parseInt(count));
+                localStorage.setItem('hf_users', JSON.stringify(users));
+                loadMembers();
+            }
+        }
+
+        // 3. تغيير الاسم
+        function changeName(index) {
+            let users = JSON.parse(localStorage.getItem('hf_users')) || [];
+            let newName = prompt('ادخل الاسم الجديد للعضو:', users[index].username);
+            if (newName && newName.trim() !== '') {
+                users[index].username = newName.trim();
+                localStorage.setItem('hf_users', JSON.stringify(users));
+                loadMembers();
+            }
+        }
+
+        // 4. حذف العضو
+        function deleteUser(index) {
+            let users = JSON.parse(localStorage.getItem('hf_users')) || [];
+            if (confirm(`هل أنت تأكد من حذف العضو (${users[index].username}) نهائياً؟`)) {
+                users.splice(index, 1);
+                localStorage.setItem('hf_users', JSON.stringify(users));
+                loadMembers();
+            }
+        }
+
+        loadMembers();
+    </script>
 </body>
 </html>

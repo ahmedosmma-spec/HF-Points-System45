@@ -124,3 +124,13 @@ function removeUnknownQuestion(question) {
   unknown = unknown.filter(q => q.toLowerCase().trim() !== question.toLowerCase().trim());
   localStorage.setItem('hf_unknown_questions', JSON.stringify(unknown));
 }
+// ❌ السطر القديم اللي كان بيجيب error:
+function goToInbox() {
+    window.location.href = 'complaints.html';
+}
+
+// ✅ غيّره خليه يفتح صفحة تقديم الشكوى والردود بتاعتك مباشرة:
+function goToInbox() {
+    window.location.href = 'complaint.html';
+}
+
