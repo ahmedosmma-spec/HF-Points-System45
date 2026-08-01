@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إعدادات العضو</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- حماية كلمة المرور -->
+    <div id="authSection" class="card">
+      <header>
+        <h2>حماية الصفحة</h2>
+        <p>أدخل كلمة المرور للوصول إلى خيارات العضو</p>
+      </header>
+      <div class="form-group">
+        <input type="password" id="passwordInput" placeholder="كلمة المرور">
+      </div>
+      <button id="authBtn" class="btn btn-success" style="width: 100%;">دخول</button>
+    </div>
+
+    <!-- التحكم بعد كتابة كلمة المرور الصحيحة -->
+    <div id="settingsSection" style="display: none;">
+      <header>
+        <h1 id="memberNameTitle">إعدادات العضو</h1>
+        <p id="memberStatusText"></p>
+      </header>
+
+      <div class="card" style="display: grid; gap: 12px;">
+        <button id="addPointsBtn" class="btn btn-success">➕ إضافة نقاط</button>
+        <button id="deductPointsBtn" class="btn btn-warning">➖ خصم نقاط</button>
+        <button id="editNameBtn" class="btn">✏️ تعديل الاسم</button>
+        <button id="deleteMemberBtn" class="btn btn-danger">🗑️ حذف العضو</button>
+      </div>
+
+      <a href="members.html" class="btn" style="width: 100%; background-color: #4b5563;">الرجوع للقائمة</a>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const memberId = urlParams.get('id');
+
+    let currentMember = null;
+
+    document.getElementById('authBtn').addEventListener('click', () => {
+      const pass = document.getElementById('passwordInput').value;
+      if (pass === '0899') {
+        document.getElementById('authSection').style.display = 'none';
+        document.getElementById('settingsSection').style.display = 'block';
+        loadMemberData();
+      } else {
+        alert('كلمة المرور غير صحيحة!');
+      }
+    });
+
+    function loadMemberData() {
+      const members = getMembers();
+      currentMember = members.find(m => m.id === memberId);
+
+      if (!currentMember) {
+        alert('العضو غير موجود!');
+        window.location.href = 'members.html';
+        return;
+      }
+
+      const status = calculateStatus(currentMember.points);
+      document.getElementById('memberNameTitle').textContent = `👤 ${currentMember.name}`;
+      document.getElementById('memberStatusText').textContent = `النقاط الحالية: ${currentMember.points} | الحالة: ${status.icon} ${status.text}`;
+    }
+
+    // إضافة نقاط
+    document.getElementById('addPointsBtn').addEventListener('click', () => {
+      const amount = parseInt(prompt("أدخل عدد النقاط المراد إضافتها:"), 10);
+      if (isNaN(amount) || amount <= 0) return;
+
+      const members = getMembers();
+      const member = members.find(m => m.id === memberId);
+
+      if (member.points + amount > 100) {
+        alert("لا يمكن أن تتجاوز النقاط الحد الأقصى (100).");
+        return;
+      }
+
+      member.points += amount;
+      saveMembers(members);
+      addLog(`➕ تم إضافة ${amount} نقاط لـ ${member.name}`);
+      loadMemberData();
+    });
+
+    // خصم نقاط
+    document.getElementById('deductPointsBtn').addEventListener('click', () => {
+      const amount = parseInt(prompt("أدخل عدد النقاط المراد خصمها:"), 10);
+      if (isNaN(amount) || amount <= 0) return;
+
+      const members = getMembers();
+      const member = members.find(m => m.id === memberId);
+
+      if (member.points - amount < 0) {
+        alert("لا يمكن أن تقل النقاط عن صفر.");
+        return;
+      }
+
+      member.points -= amount;
+      member.lastDeductionDate = new Date().toISOString(); // تسجيل تاريخ الخصم
+
+      saveMembers(members);
+      addLog(`➖ تم خصم ${amount} نقاط من ${member.name}`);
+      loadMemberData();
+    });
+
+    // تعديل الاسم
+    document.getElementById('editNameBtn').addEventListener('click', () => {
+      const newName = prompt("أدخل الاسم الجديد:", currentMember.name);
+      if (!newName || !newName.trim()) return;
+
+      const members = getMembers();
+      const member = members.find(m => m.id === memberId);
+      const oldName = member.name;
+
+      member.name = newName.trim();
+      saveMembers(members);
+      addLog(`✏️ تم تغيير اسم ${oldName} إلى ${member.name}`);
+      loadMemberData();
+    });
+
+    // حذف العضو
+    document.getElementById('deleteMemberBtn').addEventListener('click', () => {
+      if (confirm(`هل أنت متأكد من حذف العضو "${currentMember.name}"؟`)) {
+        let members = getMembers();
+        const memberName = currentMember.name;
+
+        members = members.filter(m => m.id !== memberId);
+        saveMembers(members);
+        addLog(`🗑️ تم حذف العضو ${memberName}`);
+
+        alert("تم الحذف بنجاح.");
+        window.location.href = 'members.html';
+      }
+    });
+  </script>
+</body>
+</html>
