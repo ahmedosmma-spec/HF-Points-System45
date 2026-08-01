@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام إدارة نقاط الأعضاء (HF)</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* زر صندوق الوارد العائم أسفل الصفحة */
+    .inbox-floating-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      width: 55px;
+      height: 55px;
+      background: #1f2937;
+      border: 2px solid #3b82f6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 1000;
+      user-select: none;
+      transition: transform 0.2s;
+    }
+    .inbox-floating-btn:active {
+      transform: scale(0.95);
+    }
+    .badge-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #ef4444;
+      color: #fff;
+      font-size: 12px;
+      font-weight: bold;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
+    }
+
+    /* نافذة المنبثقة بنفس تصميم كروت الموقع */
+    .inbox-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      backdrop-filter: blur(3px);
+    }
+    .inbox-card {
+      background: #111827;
+      border: 1px solid #374151;
+      padding: 20px;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .inbox-messages-list {
+      overflow-y: auto;
+      max-height: 320px;
+      margin: 15px 0;
+      padding-left: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>HF Points System</h1>
+      <p id="welcomeMsg">نظام إدارة ومتابعة نقاط الأعضاء</p>
+    </header>
+
+    <div class="card">
+      <div class="nav-buttons">
+        <a href="profile.html" class="btn" style="background-color: #3b82f6;">الحساب 👤</a>
+        <a href="bot.html" class="btn" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">🤖 بوت</a>
+        <a href="add-member.html" class="btn btn-success">➕ إضافة عضو</a>
+        <a href="members.html" class="btn">👥 قائمة الأعضاء</a>
+        <a href="complaint.html" class="btn btn-danger">اشتكي😔</a>
+        <a href="logs.html" class="btn btn-warning">📜 سجل العمليات</a>
+        <a href="admin.html" id="adminBtn" class="btn btn-admin">ادمن⚡</a>
+      </div>
+      <br>
+      <button id="logoutUserBtn" class="btn btn-danger" style="width: 100%; background-color: #374151;">🚪 تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <!-- زر صندوق الوارد العائم 👁️‍🗨️ أسفل الصفحة -->
+  <div class="inbox-floating-btn" id="openInboxBtn">
+    👁️‍🗨️
+    <div class="badge-count" id="inboxBadge" style="display: none;">0</div>
+  </div>
+
+  <!-- نافذة صندوق الوارد المنبثقة -->
+  <div class="inbox-modal" id="inboxModal">
+    <div class="inbox-card">
+      <h2 style="margin: 0; text-align: center; border-bottom: 1px solid #374151; padding-bottom: 10px;">صندوق الوارد 👁️‍🗨️</h2>
+      
+      <div id="inboxList" class="inbox-messages-list"></div>
+
+      <button onclick="closeInbox()" class="btn btn-danger" style="width:100%; margin-top: auto;">إغلاق</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (typeof checkAuthRequirement === 'function') checkAuthRequirement();
+
+    if (typeof getCurrentUser === 'function') {
+      const currentUser = getCurrentUser();
+      if (currentUser && currentUser.username) {
+        document.getElementById('welcomeMsg').textContent = `مرحباً بك يا ${currentUser.username} 👋 في نظام HF`;
+      }
+    }
+
+    // تحديث عدد الرسائل غير المقروءة في الكورة الحمراء
+    function updateInboxBadge() {
+      let count = 0;
+      if (typeof getUnreadInboxCount === 'function') {
+        count = getUnreadInboxCount();
+      }
+      const badge = document.getElementById('inboxBadge');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // فتح نافذة صندوق الوارد
+    document.getElementById('openInboxBtn').addEventListener('click', () => {
+      const modal = document.getElementById('inboxModal');
+      const listDiv = document.getElementById('inboxList');
+      
+      let currentUser = null;
+      if (typeof getCurrentUser === 'function') {
+        currentUser = getCurrentUser();
+      }
+      
+      let complaints = [];
+      if (typeof getComplaints === 'function') {
+        complaints = getComplaints();
+      }
+
+      // تصفية الرسائل الخاصة بالعضو الحالي فقط
+      const userComplaints = (currentUser && currentUser.username) 
+        ? complaints.filter(c => c.username === currentUser.username)
+        : [];
+
+      // لو مفيش أي رسائل، إظهار النص الرمادي
+      if (userComplaints.length === 0) {
+        listDiv.innerHTML = '<p style="color: #9ca3af; text-align: center; font-size: 15px; margin: 30px 0;">لا توجد رسائل حتى الآن</p>';
+      } else {
+        listDiv.innerHTML = userComplaints.map(c => `
+          <div style="background:#1f2937; padding:12px; border-radius:8px; margin-bottom:10px; border-right: 3px solid #3b82f6;">
+            <div style="font-size:12px; color:#9ca3af; margin-bottom:4px;">شكواك بتاريخ (${c.date || 'سابق'}):</div>
+            <div style="margin-bottom:8px; font-weight:bold;">${c.text}</div>
+            ${c.reply 
+              ? `<div style="background:#065f46; color:#e5e7eb; padding:8px; border-radius:6px; font-size:13px; margin-top:6px;"><strong>رد الأدمن:</strong> ${c.reply}</div>` 
+              : `<div style="color:#f59e0b; font-size:12px; margin-top:4px;">⏳ في انتظار رد الأدمن...</div>`}
+          </div>
+        `).join('');
+      }
+
+      modal.style.display = 'flex';
+
+      // علم على الرسائل أنها قُرأت
+      if (typeof markInboxAsRead === 'function') {
+        markInboxAsRead();
+        updateInboxBadge();
+      }
+    });
+
+    function closeInbox() {
+      document.getElementById('inboxModal').style.display = 'none';
+    }
+
+    // إغلاق النافذة عند الضغط في أي مكان خارج الكارت
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('inboxModal');
+      if (e.target === modal) {
+        closeInbox();
+      }
+    });
+
+    // حماية زر الأدمن
+    document.getElementById('adminBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      const pass = prompt("أدخل كلمة مرور الأدمن:");
+      if (pass === '0899') {
+        if (typeof loginAdmin === 'function') loginAdmin();
+        window.location.href = 'admin.html';
+      } else if (pass !== null) {
+        alert("كلمة المرور غير صحيحة!");
+      }
+    });
+
+    // تسجيل الخروج
+    document.getElementById('logoutUserBtn').addEventListener('click', () => {
+      if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
+        if (typeof logoutUser === 'function') logoutUser();
+        window.location.href = 'login.html';
+      }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateInboxBadge();
+    });
+  </script>
+</body>
+</html>
