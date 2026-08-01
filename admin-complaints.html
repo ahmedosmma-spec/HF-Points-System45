@@ -1,50 +1,119 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة التحكم | الأدمن ⚡</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - الأدمن ⚡</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #121212; color: #ffffff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 500px; margin-bottom: 20px; }
+        h1 { color: #5865f2; font-size: 1.8rem; }
+        .back-btn { background: #374151; color: #fff; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; }
+
+        .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+        
+        /* قسم الإعدادات */
+        .settings-card { background: #1e293b; border: 1px solid #38bdf8; border-radius: 12px; padding: 15px; margin-bottom: 10px; }
+        .settings-title { font-weight: bold; font-size: 1.1rem; color: #38bdf8; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        
+        /* قسم الشكاوى والردود */
+        .card { background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 12px; padding: 15px; }
+        .user-name { font-weight: bold; color: #74b9ff; margin-bottom: 5px; }
+        .complaint-text { background: #121212; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 0.95rem; border-right: 3px solid #ef4444; }
+        
+        textarea { width: 100%; height: 70px; background: #121212; color: #fff; border: 1px solid #30363d; border-radius: 8px; padding: 8px; font-family: inherit; margin-bottom: 8px; outline: none; }
+        button.send-btn { background: #10b981; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
+        button.settings-btn { background: #f59e0b; color: #000; border: none; padding: 10px 15px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 5px; }
+
+        .no-data { text-align: center; color: #a4b0be; padding: 20px; background: #1a1a1a; border-radius: 12px; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>لوحة التحكم بالأدمن ⚡</h1>
-      <p>مرحباً بك! يمكنك الوصول لجميع صلاحيات النظام مباشرة.</p>
-    </header>
 
-    <div class="card" style="display: grid; gap: 12px;">
-      <a href="add-member.html" class="btn btn-success">➕ إضافة عضو جديد</a>
-      <a href="members.html" class="btn">👥 قائمة الأعضاء والتحكم بالنقاط</a>
-      <a href="admin-complaints.html" class="btn btn-danger">اسمع الشكاوي😑</a>
-      <a href="logs.html" class="btn btn-warning">📜 سجل العمليات الكامل</a>
-      <button id="logoutBtn" class="btn btn-danger" style="background-color: #991b1b;">🚪 تسجيل الخروج من الأدمن</button>
+    <div class="header">
+        <h1>⚡ لوحة التحكم - الأدمن</h1>
+        <a href="index.html" class="back-btn">الرئيسية ↩️</a>
     </div>
 
-    <a href="index.html" class="btn" style="width: 100%; background-color: #4b5563;">الرجوع للرئيسية</a>
-  </div>
+    <div class="container">
+        
+        <!-- ⚙️ قسم إعدادات الأدمن -->
+        <div class="settings-card">
+            <div class="settings-title">⚙️ إعدادات النظام والأدمن</div>
+            <button class="settings-btn" onclick="changeAdminPassword()">تغيير كلمة سر الأدمن (الحالية: 0899)</button>
+        </div>
 
-  <script src="app.js"></script>
-  <script>
-    if (!isAdminLoggedIn()) {
-      const pass = prompt("أدخل كلمة مرور الأدمن للوصول لهذه الصفحة:");
-      if (pass === '0899') {
-        loginAdmin();
-      } else {
-        alert("كلمة المرور غير صحيحة!");
-        window.location.href = 'index.html';
-      }
-    }
+        <h2 style="font-size: 1.2rem; color: #a4b0be; margin-top: 10px;">📥 الشكاوى الواردة للرد عليها:</h2>
+        
+        <div id="complaintsList">
+            <!-- بتنزل الشكاوى هنا -->
+        </div>
 
-    // زر خروج الأدمن مع رسالة التأكيد
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      if (confirm("هل أنت متأكد من الخروج من وضع الأدمن؟")) {
-        logoutAdmin();
-        alert("تم تسجيل الخروج من وضع الأدمن.");
-        window.location.href = 'index.html';
-      }
-    });
-  </script>
+    </div>
+
+    <script>
+        // عرض كافة الشكاوى
+        function loadAdminComplaints() {
+            let complaints = JSON.parse(localStorage.getItem('hf_complaints')) || [];
+            const container = document.getElementById('complaintsList');
+
+            if (complaints.length === 0) {
+                container.innerHTML = '<div class="no-data">لا توجد شكاوى حالياً 📭</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            complaints.reverse().forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="user-name">👤 العضو: ${item.username}</div>
+                    <div class="complaint-text">${item.text}</div>
+                    
+                    ${item.reply ? `
+                        <div style="color: #10b981; font-size: 0.9rem; font-weight: bold; margin-top: 5px;">✅ تم الرد: ${item.reply}</div>
+                    ` : `
+                        <textarea id="replyInput-${item.id}" placeholder="اكتب ردك هنا للوصول لصندوق الوارد..."></textarea>
+                        <button class="send-btn" onclick="replyToComplaint(${item.id})">إرسال الرد لـ 👁️‍🗨️</button>
+                    `}
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // دالة الرد على الشكوى
+        function replyToComplaint(complaintId) {
+            const replyText = document.getElementById('replyInput-' + complaintId).value.trim();
+            if (!replyText) {
+                alert('اكتب الرد الأول!');
+                return;
+            }
+
+            let complaints = JSON.parse(localStorage.getItem('hf_complaints')) || [];
+            let target = complaints.find(c => c.id === complaintId);
+
+            if (target) {
+                target.reply = replyText;
+                target.read = false; // عشان تظهر الكورة الحمراء في صندوق الوارد
+                localStorage.setItem('hf_complaints', JSON.stringify(complaints));
+                
+                alert('تم إرسال الرد بنجاح ووصل لصندوق الوارد للعضو! 🚀');
+                loadAdminComplaints();
+            }
+        }
+
+        // دالة تغيير كلمة السر في الإعدادات
+        function changeAdminPassword() {
+            let newPass = prompt('ادخل كلمة السر الجديدة للأدمن:');
+            if (newPass) {
+                localStorage.setItem('admin_pass', newPass);
+                alert('تم تغيير كلمة السر بنجاح!');
+            }
+        }
+
+        loadAdminComplaints();
+    </script>
 </body>
 </html>

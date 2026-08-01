@@ -3,60 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - HF Points System</title>
+    <title>نظام إدارة نقاط الأعضاء (HF)</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #0d1117; color: #c9d1d9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-        .card { background-color: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
-        .card h2 { text-align: center; color: #58a6ff; margin-bottom: 20px; }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; margin-bottom: 6px; color: #8b949e; font-size: 0.9rem; }
-        .input-group input { width: 100%; padding: 12px; border-radius: 6px; border: 1px solid #30363d; background-color: #0d1117; color: #fff; font-size: 1rem; outline: none; }
-        .input-group input:focus { border-color: #58a6ff; }
-        .btn { width: 100%; padding: 12px; background-color: #1f6feb; color: #fff; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn:hover { background-color: #388bfd; }
-        .footer-text { text-align: center; margin-top: 18px; font-size: 0.85rem; color: #8b949e; }
-        .footer-text a { color: #58a6ff; text-decoration: none; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: #121212; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; position: relative; }
+        
+        h1 { color: #5865f2; font-size: 2.2rem; font-weight: bold; margin-bottom: 8px; text-align: center; }
+        .welcome-text { color: #a4b0be; font-size: 1.1rem; margin-bottom: 25px; text-align: center; }
+
+        .container { background-color: #1a1a1a; border: 1px solid #2d2d2d; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+
+        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; color: #ffffff; text-decoration: none; border: none; cursor: pointer; text-align: center; }
+        .btn:active { transform: scale(0.98); }
+
+        /* الألوان الأصلية */
+        .btn-account { background: #3b82f6; }
+        .btn-bot { background: #06b6d4; }
+        .btn-add { background: #10b981; }
+        .btn-members { background: #6366f1; }
+        .btn-complaint { background: #ef4444; }
+        .btn-logs { background: #f59e0b; color: #000; }
+        .btn-admin { background: #6366f1; }
+        .btn-logout { background: #374151; color: #d1d5db; border: 1px solid #4b5563; }
+
+        /* زرار صندوق الوارد العائم */
+        .inbox-float {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: #1e293b;
+            border: 2px solid #38bdf8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .inbox-float span { font-size: 24px; }
+
+        .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background-color: #ef4444;
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: bold;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #121212;
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>تسجيل الدخول 🔑</h2>
-        <form id="loginForm">
-            <div class="input-group">
-                <label>اسم المستخدم</label>
-                <input type="text" id="loginUser" placeholder="اسمك..." required>
-            </div>
-            <div class="input-group">
-                <label>كلمة السر</label>
-                <input type="password" id="loginPass" placeholder="••••••••" required>
-            </div>
-            <button type="submit" class="btn">دخول</button>
-        </form>
-        <div class="footer-text">
-            معندكش حساب؟ <a href="register.html">اعمل حساب جديد من هنا</a>
-        </div>
+    <h1>HF Points System</h1>
+    <div class="welcome-text">مرحباً بك يا <span id="userNameDisplay">احمد</span> 👋 في نظام HF</div>
+
+    <div class="container">
+        <a href="profile.html" class="btn btn-account">👤 الحساب</a>
+        <a href="bot.html" class="btn btn-bot">🤖 بوت</a>
+        <a href="add-member.html" class="btn btn-add">➕ إضافة عضو</a>
+        
+        <!-- 🎯 هنا الربط الصح لملف members.html -->
+        <a href="members.html" class="btn btn-members">👥 قائمة الأعضاء</a>
+        
+        <a href="complaint.html" class="btn btn-complaint">😔 اشتكي</a>
+        <a href="logs.html" class="btn btn-logs">📜 سجل العمليات</a>
+        
+        <!-- زرار الأدمن بكلمة السر 0899 -->
+        <button onclick="openAdmin()" class="btn btn-admin">⚡ ادمن</button>
+        
+        <button onclick="logout()" class="btn btn-logout">🚪 تسجيل الخروج</button>
+    </div>
+
+    <!-- زرار صندوق الوارد العائم -->
+    <div class="inbox-float" onclick="goToInbox()">
+        <span>👁️‍🗨️</span>
+        <div id="inboxBadge" class="badge">0</div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const user = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) {
+            // لو مش مسجل دخول يرجع لو صفحة تسجيل الدخول (لو عندك صفحة تسجيل دخول منفصلة، أو يفضل خليه ثابت)
+            // window.location.href = 'login.html'; 
+        } else {
+            document.getElementById('userNameDisplay').innerText = user.username || 'احمد';
+            checkUnreadComplaints();
+        }
 
-            let users = JSON.parse(localStorage.getItem('hf_users')) || [];
+        function checkUnreadComplaints() {
+            let complaints = JSON.parse(localStorage.getItem('hf_complaints')) || [];
+            let unreadCount = complaints.filter(c => c.username === (user ? user.username : '') && c.reply && !c.read).length;
 
-            // التحقق من صحة البيانات
-            const foundUser = users.find(u => u.username === user && u.password === pass);
-
-            if (foundUser) {
-                alert('أهلاً بيك يا ' + user + '! تم تسجيل الدخول بنجاح 🔥');
-                // هنا تقدر تحوله لصفحة النقاط الرئيسية لو عامل لها ملف تاني
+            const badge = document.getElementById('inboxBadge');
+            if (unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'flex';
             } else {
-                alert('اسم المستخدم أو كلمة السر غلط! أو لسه معملتش حساب.');
+                badge.style.display = 'none';
             }
-        });
+        }
+
+        function goToInbox() {
+            // يفتح صفحة الشكاوى أو الردود (لو عندك صفحة ردود مخصصة غير complaint.html عرفني)
+            window.location.href = 'complaint.html';
+        }
+
+        function openAdmin() {
+            const pass = prompt('ادخل كلمة سر الأدمن:');
+            if (pass === '0899') { 
+                window.location.href = 'admin.html';
+            } else if (pass !== null) {
+                alert('كلمة السر غير صحيحة!');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('currentUser');
+            alert('تم تسجيل الخروج بنجاح');
+            // لو عندك صفحة تسجيل دخول اكتب اسمها هنا، مثلاً login.html
+        }
     </script>
 </body>
 </html>
